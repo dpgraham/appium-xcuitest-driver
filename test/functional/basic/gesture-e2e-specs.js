@@ -7,7 +7,7 @@ import { retryInterval } from 'asyncbox';
 import { UICATALOG_CAPS } from '../desired';
 import { initSession, deleteSession, MOCHA_TIMEOUT } from '../helpers/session';
 import { APPIUM_IMAGE } from '../web/helpers';
-import { getGenericSimulatorForIosVersion } from '../../../lib/utils';
+import { translateDeviceName } from '../../../lib/utils';
 import { util } from 'appium-support';
 import xcode from 'appium-xcode';
 
@@ -159,11 +159,13 @@ describe('XCUITestDriver - gestures', function () {
       await driver.execute('mobile: scroll', {direction: 'down'});
       await driver.elementByAccessibilityId('Steppers').click();
 
+      await B.delay(1000);
       let stepper = await driver.elementByAccessibilityId('Increment');
       let action = new wd.TouchAction(driver);
       action.tap({el: stepper, count: 2});
       await action.perform();
 
+      await B.delay(1000);
       await driver.elementByAccessibilityId('2')
         .should.not.be.rejected;
     });
@@ -255,11 +257,8 @@ describe('XCUITestDriver - gestures', function () {
               return true;
             }
             const { platformVersion, deviceName } = await driver.sessionCapabilities();
-            const generic = getGenericSimulatorForIosVersion(platformVersion, deviceName);
-            if (_.includes(_.toLower(generic), ('iphone x'))) {
-              return true;
-            }
-            return false;
+            const translatedDeviceName = translateDeviceName(platformVersion, deviceName).toLowerCase();
+            return _.includes(translatedDeviceName, 'iphone x');
           })();
 
           x = width / 2;
