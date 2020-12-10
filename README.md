@@ -6,8 +6,6 @@
 [![devDependency Status](https://david-dm.org/appium/appium-xcuitest-driver/dev-status.svg)](https://david-dm.org/appium/appium-xcuitest-driver#info=devDependencies)
 
 [![Build Status](https://api.travis-ci.org/appium/appium-xcuitest-driver.png?branch=master)](https://travis-ci.org/appium/appium-xcuitest-driver)
-[![Coverage Status](https://coveralls.io/repos/appium/appium-xcuitest-driver/badge.svg?branch=master)](https://coveralls.io/r/appium/appium-xcuitest-driver?branch=master)
-[![Coverage Status](https://coveralls.io/repos/appium/appium-xcuitest-driver/badge.svg?branch=master)](https://coveralls.io/r/appium/appium-xcuitest-driver?branch=master)
 
 *Note*: Issue tracking for this repo has been disabled. Please use the [main Appium issue tracker](https://github.com/appium/appium/issues) instead.
 
@@ -34,6 +32,7 @@ For real devices we can use [xcpretty](https://github.com/supermarin/xcpretty) t
 ```
 gem install xcpretty
 ```
+
 
 ## Xcode dependency
 
@@ -126,11 +125,16 @@ Differences are noted here:
 |`usePrebuiltWDA`|Skips the build phase of running the WDA app. Building is then the responsibility of the user. Only works for Xcode 8+. Defaults to `false`.|e.g., `true`|
 |`useCarthageSsl`|Use SSL to download dependencies for `WebDriverAgent`. Defaults to `true`| `true`, `false` |
 |`shouldUseSingletonTestManager`|Use default proxy for test management within `WebDriverAgent`. Setting this to `false` sometimes helps with socket hangup problems. Defaults to `true`.|e.g., `false`|
+|`waitForIdleTimeout`|The amount of time in float seconds to wait until the application under test is idling. XCTest requires the app's main thread to be idling in order to execute any action on it, so WDA might not even start/freeze if the app under test is constantly hogging the main thread. The default value is `10` (seconds). Setting it to zero disables idling checks completely (not recommended) and has the same effect as setting `waitForQuiescence` to `false`. Available since Appium 1.19.1. |
 |`useXctestrunFile`|Use Xctestrun file to launch WDA. It will search for such file in `bootstrapPath`. Expected name of file is `WebDriverAgentRunner_iphoneos<sdkVersion>-arm64.xctestrun` for real device and `WebDriverAgentRunner_iphonesimulator<sdkVersion>-x86_64.xctestrun` for simulator. One can do `build-for-testing` for `WebDriverAgent` project for simulator and real device and then you will see [Product Folder like this](docs/useXctestrunFile.png) and you need to copy content of this folder at `bootstrapPath` location. Since this capability expects that you have already built `WDA` project, it neither checks whether you have necessary dependencies to build `WDA` nor will it try to build project. Defaults to `false`. _Tips: `Xcodebuild` builds for the target platform version. We'd recommend you to build with minimal OS version which you'd like to run as the original WDA module. e.g. If you build WDA for 12.2, the module cannot run on iOS 11.4 because of loading some module error on simulator. A module built with 11.4 can work on iOS 12.2. (This is xcodebuild's expected behaviour.)_ |e.g., `true`|
 |`useSimpleBuildTest`| Build with `build` and run test with `test` in xcodebuild for all Xcode version if this is `true`, or build with `build-for-testing` and run tests with `test-without-building` for over Xcode 8 if this is `false`. Defaults to `false`. | `true` or `false` |
 |`wdaEventloopIdleDelay`|Delays the invocation of `-[XCUIApplicationProcess setEventLoopHasIdled:]` by the number of seconds specified with this capability. This can help quiescence apps that fail to do so for no obvious reason (and creating a session fails for that reason). This increases the time for session creation because `-[XCUIApplicationProcess setEventLoopHasIdled:]` is called multiple times. If you enable this capability start with at least `3` seconds and try increasing it, if creating the session still fails. Defaults to `0`. |e.g. `5`|
 |`processArguments`|Process arguments and environment which will be sent to the `WebDriverAgent` server.|`{ args: ["a", "b", "c"] , env: { "a": "b", "c": "d" } }` or `'{"args": ["a", "b", "c"], "env": { "a": "b", "c": "d" }}'`|
 |`autoLaunch`|When set to `false`, prevents the application under test from being launched automatically as a part of the new session startup process. The launch become the responsibility of the user. Defaults to `true`.|`true` or `false`|
+|`allowProvisioningDeviceRegistration`|Allow `xcodebuild` to register your destination device on the developer portal if necessary. Requires a developer account to have been added in Xcode's Accounts preference pane. Defaults to `false`.|`true` or `false`|
+|`resultBundlePath`| Specify the path to the result bundle path as `xcodebuild` argument for `WebDriverAgent` build under a security flag (Please check _Opt-in Features_ section below). `WebDriverAgent` process must start/stop every time to pick up changed value of this property. Specifying `useNewWDA` to `true` may help there. Please read `man xcodebuild` for more details. | e.g. `/path/to/resultbundle` |
+|`resultBundleVersion`| Specify the version of result bundle as `xcodebuild` argument for `WebDriverAgent` build. The default value depends on your Xcode version. Please read `man xcodebuild` for more details. | e.g. `/path/to/resultbundle` |
+|`safariIgnoreWebHostnames`| Provide a list of hostnames (comma-separated) that the Safari automation tools should ignore. This is to provide a workaround to prevent a webkit bug where the web context is unintentionally changed to a 3rd party website and the test gets stuck. The common culprits are search engines (yahoo, bing, google) and `about:blank` |e.g. `'www.yahoo.com, www.bing.com, www.google.com, about:blank'`|
 
 ### Simulator control capabilities:
 
@@ -151,12 +155,13 @@ Differences are noted here:
 |`permissions`| Allows to set permissions for the specified application bundle on Simulator only. The capability value is expected to be a valid JSON string with `{"<bundleId1>": {"<serviceName1>": "<serviceStatus1>", ...}, ...}` format. Since Xcode SDK 11.4 Apple provides native APIs to interact with application settings. Check the output of `xcrun simctl privacy booted` command to get the list of available permission names. Use `yes`, `no` and `unset` as values in order to `grant`, `revoke` or `reset` the corresponding permission. Below Xcode SDK 11.4 it is required that `applesimutils` package is installed and available in PATH. The list of available service names and statuses can be found at https://github.com/wix/AppleSimulatorUtils. | e. g. `{"com.apple.mobilecal": {"calendar": "YES"}}` |
 |`iosSimulatorLogsPredicate`|Set the `--predicate` flag in the ios simulator logs|e.g.: `'process != "locationd" AND process != "DTServiceHub"' AND process != "mobileassetd"`|
 |`simulatorPasteboardAutomaticSync`| Handle the `-PasteboardAutomaticSync` flag when simulator process launches. It could improve launching simulator performance not to sync pasteboard with the system when this value is `off`. `on` forces the flag enabled. `system` does not provide the flag to the launching command. `on`, `off`, or `system` is available. They are case insensitive. Defaults to `off` | e.g. `system` |
+|`simulatorDevicesSetPath`| This capability allows to set an alternative path to the simulator devices set in case you have multiple sets deployed on your local system. Such feature could be useful if you, for example, would like to save disk space on the main system volume. | e.g. `/MyVolume/Devices` |
 
 ### General capabilities:
 
 |Capability|Description|Values|
 |----------|-----------|------|
-|`resetOnSessionStartOnly`|Whether to perform reset on test session finish (`false`) or not (`true`). Keeping this variable set to `true` and Simulator running (the default behaviour since version 1.6.4) may significantly shorten the duratiuon of test session initialization.|Either `true` or `false`. Defaults to `true`|
+|`resetOnSessionStartOnly`|Whether to perform reset on test session finish (`false`) or not (`true`). Keeping this variable set to `true` and Simulator running (the default behaviour since version 1.6.4) may significantly shorten the duration of test session initialization.|Either `true` or `false`. Defaults to `true`|
 |`commandTimeouts`|Custom timeout(s) in milliseconds for WDA backend commands execution. This might be useful if WDA backend freezes unexpectedly or requires too much time to fail and blocks automated test execution. The value is expected to be of type string and can either contain max milliseconds to wait for each WDA command to be executed before terminating the session forcefully or a valid JSON string, where keys are internal Appium command names (you can find these in logs, look for "Executing command 'command_name'" records) and values are timeouts in milliseconds. You can also set the 'default' key to assign the timeout for all other commands not explicitly enumerated as JSON keys.|`'120000'`, `'{"findElement": 40000, "findElements": 40000, "setValue": 20000, "default": 120000}'`|
 |`maxTypingFrequency`|Maximum frequency of keystrokes for typing and clear. If your tests are failing because of typing errors, you may want to adjust this. Defaults to 60 keystrokes per minute.|e.g., `30`|
 |`simpleIsVisibleCheck`|Use native methods for determining visibility of elements. In some cases this takes a long time. Setting this capability to `false` will cause the system to use the position and size of elements to make sure they are visible on the screen. This can, however, lead to false results in some situations. Defaults to `false`, except iOS 9.3, where it defaults to `true`.|e.g., `true`, `false`|
@@ -172,6 +177,7 @@ Differences are noted here:
 |`safariLogAllCommunication`|Log all plists sent to and received from the Web Inspector, as plain text. For some operations this can be a lot of data, so it is recommended to be used only when necessary. Defaults to `false`.|`true` or `false`|
 |`safariLogAllCommunicationHexDump`|Log all communication sent to and received from the Web Inspector, as raw hex dump and printable characters. This logging is done _before_ any data manipulation, and so can elucidate some communication issues. Like `safariLogAllCommunication`, this can produce a lot of data in some cases, so it is recommended to be used only when necessary. Defaults to `false`.|`true` or `false`|
 |`safariSocketChunkSize`|The size, in _bytes_, of the data to be sent to the Web Inspector on iOS 11+ real devices. Some devices hang when sending large amounts of data to the Web Inspector, and breaking them into smaller parts can be helpful in those cases. Defaults to `16384` (also the maximum possible)|e.g., `1000`|
+|`safariWebInspectorMaxFrameLength`| The maximum size in bytes of a single data frame for the Web Inspector. Too high values could introduce slowness and/or memory leaks. Too low values could introduce possible buffer overflow exceptions. Defaults to 20MB (`20*1024*1024`) |e.g. `1024`, `100*1024*1024` |
 |`additionalWebviewBundleIds`|Array (or JSON array) of possible bundle identifiers for webviews. This is sometimes necessary if the Web Inspector is found to be returning a modified bundle identifier for the app. Defaults to `[]`|e.g., `['io.appium.modifiedId', 'ABCDEF']`|
 |`webviewConnectTimeout`|The time to wait, in `ms`, for the initial presence of webviews in MobileSafari or hybrid apps. Defaults to `0`|e.g., '5000'|
 |`launchWithIDB`| Launch WebDriverAgentRunner with [idb](https://github.com/facebook/idb) instead of xcodebuild. This could save a significant amout of time by skiping the xcodebuild process, although the idb might not be very reliable, especially with fresh Xcode SDKs. Check the [idb repository](https://github.com/facebook/idb/issues) for more details on possible compatibility issues. Defaults to `false` |`true` or `false`|
@@ -185,6 +191,7 @@ These can be enabled when running this driver through Appium, via the `--allow-i
 |shutdown_other_sims|Allow any session to use a capability to shutdown any running simulators on the host|
 |perf_record|Allow recording the system performance and other metrics of the simulator|
 |audio_record|Allow recording of host audio input(s)|
+|customize_result_bundle_path| Allow customizeing the path to result bundles by `resultBundlePath` capability |
 
 
 ### Watch

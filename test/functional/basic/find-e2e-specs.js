@@ -331,11 +331,6 @@ describe('XCUITestDriver - find', function () {
       // if we don't pause, WDA freaks out sometimes, especially on fast systems
       await B.delay(TEST_PAUSE_DURATION);
     });
-    it('should find visible elements', async function () {
-      let els = await driver.elements('-ios predicate string', 'visible = 1');
-      els.should.have.length.above(0);
-    });
-
     it('should find invisible elements', async function () {
       let els = await driver.elements('-ios predicate string', 'visible = 0');
       els.should.have.length.above(0);
@@ -396,7 +391,12 @@ describe('XCUITestDriver - find', function () {
       // do another call and double-check the different quote/spacing works
       let grandchild = await child.elementByXPath("/*[@firstVisible = 'true']");
 
-      await grandchild.getAttribute('name').should.eventually.eql(FIRST_ELEMENT);
+      const type = await grandchild.getAttribute('type');
+      if (type === 'XCUIElementTypeStaticText') {
+        await grandchild.getAttribute('name').should.eventually.eql(FIRST_ELEMENT);
+      } else {
+        type.should.equal('XCUIElementTypeOther');
+      }
     });
   });
 
